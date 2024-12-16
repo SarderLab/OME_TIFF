@@ -40,13 +40,13 @@ version=1
 objects = ['non-globally-sclerotic glomeruli','globally-sclerotic glomeruli','tubules','arteries-arterioles']
 contour_list = ['3','4','5','6']
 excel_sheet_names = ['Glomeruli','Sclerosed glomeruli','Tubules','Arteries - Arterioles']
-column_names = ['Object ID','Source file','Mask name','Mask Ontology ID','Protocol for mask creation (DOI)','Object type','x','y','z']
+column_names = ['Object ID','Source file','Mask name','Mask ID','Protocol for mask creation (DOI)', 'Annotation tool','Object type','x','y','z']
 ontology_names = ['UBERON:0000074','UBERON:0000074','UBERON:0009773','UBERON:0001637']
 anatomical_structures = ['UBERON:0000074','UBERON:0000074','UBERON:0009773','UBERON:0003509']
-template_names = ['/orange/pinaki.sarder/nlucarelli/HuBMAP/glomeruli-template.xlsx','/orange/pinaki.sarder/nlucarelli/HuBMAP/glomeruli-template.xlsx','/orange/pinaki.sarder/nlucarelli/HuBMAP/tubules-template.xlsx','/orange/pinaki.sarder/nlucarelli/HuBMAP/arteries-arterioles-template.xlsx']
+template_names = ['/orange/pinaki.sarder/haitham.abdelazim/HuBMAP/Templates/glomeruli-template.xlsx','/orange/pinaki.sarder/haitham.abdelazim/HuBMAP/Templates/glomeruli-template.xlsx','/orange/pinaki.sarder/haitham.abdelazim/HuBMAP/Templates/tubules-template.xlsx','/orange/pinaki.sarder/haitham.abdelazim/HuBMAP/Templates/arteries-arterioles-template.xlsx']
 
 doi = 'dx.doi.org/10.17504/protocols.io.dm6gp35p8vzp/v1'
-
+tool = 'FUSION'
 
 file_paths = glob(segmentations_dir + '*.segmentations.ome.tiff')
 
@@ -133,7 +133,7 @@ for file_path in file_paths:
                 
                 m_ids = [leftm_id,rightm_id,downm_id,upm_id]
                 m_ids = [x for x in m_ids if x!=0]
-                print(m_ids,'m_ids data')
+                # print(m_ids,'m_ids data')
                 
                 if len(m_ids) > 0:
                     mode_result = stats.mode(m_ids).mode
@@ -178,6 +178,7 @@ for file_path in file_paths:
             current_line.append(mask_name)
             current_line.append(ontology_names[j])
             current_line.append(doi)
+            current_line.append(tool)
             current_line.append(ontology_names[j])
             current_line.append(centroids_x[k])
             current_line.append(centroids_y[k])
@@ -200,12 +201,12 @@ for file_path in file_paths:
 
         #FIGURE OUT HOW TO CONCATENATE BUT KEEP THE HEADERS BELOW IT
         if j >= 2:
-            concatenated_df.to_csv(outdir + objects[j] + '-objects.csv',index=False,header=False)
+            concatenated_df.to_excel(outdir + objects[j] + '-objects.xlsx',index=False,header=False)
         else:
-            concatenated_df.to_csv(outdir + objects[j] + '-objects.csv',index=False)
+            concatenated_df.to_excel(outdir + objects[j] + '-objects.xlsx',index=False)
 
-    df1 = pd.read_csv(outdir + objects[0] + '-objects.csv',header=None)
-    df2 = pd.read_csv(outdir + objects[1] + '-objects.csv',header=None)
+    df1 = pd.read_excel(outdir + objects[0] + '-objects.xlsx',header=None)
+    df2 = pd.read_excel(outdir + objects[1] + '-objects.xlsx',header=None)
     df2 = df2.iloc[1:,:]
 
     df_all = pd.concat([df1,df2],axis=0,ignore_index=True)
@@ -228,6 +229,6 @@ for file_path in file_paths:
 
     df_all = pd.concat([df_all,scler_col],axis=1)
     df_all = df_all.fillna('N/A')
-    df_all.to_csv(outdir + 'glomeruli' + '-objects.csv',index=False,header=False)
-    os.remove(outdir + objects[0] + '-objects.csv')
-    os.remove(outdir + objects[1] + '-objects.csv')
+    df_all.to_excel(outdir + 'glomeruli' + '-objects.xlsx',index=False,header=False)
+    os.remove(outdir + objects[0] + '-objects.xlsx')
+    os.remove(outdir + objects[1] + '-objects.xlsx')
