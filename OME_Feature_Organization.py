@@ -182,6 +182,7 @@ for file_path in file_paths:
             current_line.append(ontology_names[j])
             current_line.append(centroids_x[k])
             current_line.append(centroids_y[k])
+            current_line.append(ontology_names[j])
             current_line.append(0)
             csv_lines.append(current_line)
 
@@ -212,7 +213,7 @@ for file_path in file_paths:
     df_all = pd.concat([df1,df2],axis=0,ignore_index=True)
 
     template_df = pd.read_excel(template_names[1],header=None)
-    template_df2 = pd.read_excel('/orange/pinaki.sarder/nlucarelli/HuBMAP/glomeruli-combined-template.xlsx',header=None)
+    template_df2 = pd.read_excel('/orange/pinaki.sarder/haitham.abdelazim/HuBMAP/Templates/glomeruli-combined-template.xlsx',header=None)
 
     df_all = pd.concat([template_df,df_all],axis=0,ignore_index=True)
 
