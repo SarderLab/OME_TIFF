@@ -25,14 +25,15 @@ def read_ome(file_path,page,downsample):
     with ti.TiffFile(file_path) as tiff:
 
         data = np.array(tiff.series[0].pages[page].asarray()[::downsample,::downsample])
+        print(data, 'data np array')
     return data
 
-segmentations_dir = '/orange/pinaki.sarder/nlucarelli/TEST/'
+segmentations_dir = '/orange/pinaki.sarder/haitham.abdelazim/HuBMAP/SegmentationDIRs/'
 
 downsample=1
-slide_path = '/orange/pinaki.sarder/nlucarelli/Reference/'
-excel_sheets = '/orange/pinaki.sarder/nlucarelli/ReferenceExcels/'
-outdirs = '/orange/pinaki.sarder/nlucarelli/HuBMAP/'
+slide_path = '/orange/pinaki.sarder/haitham.abdelazim/HuBMAP/Reference/'
+excel_sheets = '/orange/pinaki.sarder/haitham.abdelazim/HuBMAP/ReferenceExcels/'
+outdirs = '/orange/pinaki.sarder/haitham.abdelazim/HuBMAP/output'
 min_size = [30,30,24000,24000,10,10]
 
 version=1
@@ -54,10 +55,10 @@ for file_path in file_paths:
     outdir = outdirs + '/' + file_path.split('/')[-1].split('.segmentations')[0] + '/'
 
     if not os.path.exists(outdir):
-        os.mkdir(outdir)
-    else:
-        print('Skipping: {}'.format(file_path))
-        continue
+        os.makedirs(outdir)
+    #else:
+    #    print('Skipping: {}'.format(file_path))
+    #    continue
 
     xml = slide_path + file_path.split('/')[-1].split('.segmentations')[0] + '.xml'
     nm = slide_path + file_path.split('/')[-1].split('.segmentations')[0] + '.svs'
@@ -129,15 +130,20 @@ for file_path in file_paths:
 
                 downm = contours_temp[np.where(contours_temp[:,1]==max_y),:][0,0,:]
                 downm_id = ome_crop[downm[1]-1-min_y,downm[0]-min_x]
-
+                
                 m_ids = [leftm_id,rightm_id,downm_id,upm_id]
                 m_ids = [x for x in m_ids if x!=0]
-
-                if len(m_ids)>0:
-                    id_ome = stats.mode(m_ids)
-                    id_ome = id_ome[0][0]
+                print(m_ids,'m_ids data')
+                
+                if len(m_ids) > 0:
+                    mode_result = stats.mode(m_ids).mode
+                    if isinstance(mode_result, np.ndarray):
+                        id_ome = mode_result[0]
+                    else:
+                        id_ome = mode_result
                 else:
                     id_ome = 0
+
 
                 glom_id_ome.append(id_ome)
 
