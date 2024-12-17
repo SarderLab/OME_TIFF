@@ -182,7 +182,6 @@ for file_path in file_paths:
             current_line.append(ontology_names[j])
             current_line.append(centroids_x[k])
             current_line.append(centroids_y[k])
-            current_line.append(ontology_names[j])
             current_line.append(0)
             csv_lines.append(current_line)
 
