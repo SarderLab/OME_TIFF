@@ -62,7 +62,7 @@ for file_path in file_paths:
 
     xml = slide_path + file_path.split('/')[-1].split('.segmentations')[0] + '.xml'
     nm = slide_path + file_path.split('/')[-1].split('.segmentations')[0] + '.svs'
-    excel_sheet = excel_sheets + file_path.split('/')[-1].split('.segmentations')[0] + '_pathomic.xlsx'
+    excel_sheet = excel_sheets + file_path.split('/')[-1].split('.segmentations')[0] + '.xlsx'
 
     write_minmax_to_xml(xml)
 
