@@ -142,7 +142,8 @@ for file_path in file_paths:
 
                 if len(m_ids) > 0:
                     mode_result = stats.mode(m_ids)
-                    if mode_result.mode.size > 0:
+                    print(mode_result.mode, 'mode result', mode_result.mode.size)
+                    if len(mode_result.mode) > 0:
                         id_ome = mode_result.mode[0]
                     else:
                         # Handle case where mode_result.mode is empty
