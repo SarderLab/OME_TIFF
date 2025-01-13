@@ -34,7 +34,7 @@ downsample=1
 slide_path = '/orange/pinaki.sarder/haitham.abdelazim/HuBMAP/Reference/'
 excel_sheets = '/orange/pinaki.sarder/haitham.abdelazim/HuBMAP/ReferenceExcels/'
 outdirs = '/orange/pinaki.sarder/haitham.abdelazim/HuBMAP/output'
-min_size = [30,30,24000,24000,10,10]
+min_size = [100,100,90000,90000,100,100]
 
 version=1
 objects = ['non-globally-sclerotic glomeruli','globally-sclerotic glomeruli','tubules','arteries-arterioles']
@@ -134,8 +134,8 @@ for file_path in file_paths:
                 m_ids = [leftm_id,rightm_id,downm_id,upm_id]
                 m_ids = [x for x in m_ids if x!=0]
                 # print(m_ids,'m_ids data')
+                
                 if len(m_ids) > 0:
-                    prev_id = 0
                     mode_result = stats.mode(m_ids).mode
                     if isinstance(mode_result, np.ndarray):
                         id_ome = mode_result[0]
@@ -144,15 +144,11 @@ for file_path in file_paths:
                 else:
                     id_ome = 0
 
-                if id_ome > 0 and id_ome not in glom_id_ome:
-                    prev_id = id_ome
+
+                if id_ome not in glom_id_ome:
                     glom_id_ome.append(id_ome)
-                elif id_ome > 0 and id_ome in glom_id_ome:
-                    print('Duplicate ID found: ', id_ome, 'prev id: ',prev_id)
-                    id_ome = prev_id + 1
-                    prev_id = id_ome
-                    glom_id_ome.append(id_ome)
-                    
+                else:
+                    print('Duplicate ID found', id_ome)
 
                 centroids_x.append(centroid_x)
                 centroids_y.append(centroid_y)
