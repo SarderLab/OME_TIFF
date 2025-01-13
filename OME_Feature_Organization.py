@@ -141,9 +141,16 @@ for file_path in file_paths:
                 m_ids = [leftm_id, rightm_id, upm_id, downm_id]
 
                 if len(m_ids) > 0:
-                    id_ome = stats.mode(m_ids).mode[0]
+                    mode_result = stats.mode(m_ids)
+                    if mode_result.mode.size > 0:
+                        id_ome = mode_result.mode[0]
+                    else:
+                        # Handle case where mode_result.mode is empty
+                        id_ome = 0
                 else:
+                    # Handle case where m_ids is empty
                     id_ome = 0
+
 
                 glom_id_ome.append(id_ome)
 
