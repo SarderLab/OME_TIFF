@@ -34,7 +34,7 @@ downsample=1
 slide_path = '/orange/pinaki.sarder/haitham.abdelazim/HuBMAP/Reference/'
 excel_sheets = '/orange/pinaki.sarder/haitham.abdelazim/HuBMAP/ReferenceExcels/'
 outdirs = '/orange/pinaki.sarder/haitham.abdelazim/HuBMAP/output'
-min_size = [100,100,90000,90000,100,100]
+min_size = [30,30,24000,24000,10,10]
 
 version=1
 objects = ['non-globally-sclerotic glomeruli','globally-sclerotic glomeruli','tubules','arteries-arterioles']
