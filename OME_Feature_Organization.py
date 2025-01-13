@@ -20,6 +20,7 @@ from skimage.transform import resize
 import matplotlib.pyplot as plt
 from glob import glob
 from concurrent.futures import ProcessPoolExecutor
+import multiprocessing
 
 
 def read_ome(file_path,page,downsample):
@@ -97,7 +98,7 @@ def process_file(file_path):
 
                 m_ids = [ome_crop[coord[1] - min_y, coord[0] - min_x] for coord in [
                     (min_x, min_y), (max_x, min_y), (min_x, max_y), (max_x, max_y)] if ome_crop[coord[1] - min_y, coord[0] - min_x] != 0]
-
+                print(m_ids, 'm_ids')
                 if m_ids:
                     id_ome = stats.mode(m_ids).mode[0]
                     if id_ome not in glom_id_ome:
@@ -152,5 +153,7 @@ def process_file(file_path):
     os.remove(os.path.join(outdir, f"{objects[0]}-objects.xlsx"))
     os.remove(os.path.join(outdir, f"{objects[1]}-objects.xlsx"))
 
-with ProcessPoolExecutor() as executor:
+
+num_workers = multiprocessing.cpu_count()
+with ProcessPoolExecutor(max_workers=num_workers) as executor:
     executor.map(process_file, file_paths)
