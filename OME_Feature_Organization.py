@@ -145,7 +145,10 @@ for file_path in file_paths:
                     id_ome = 0
 
 
-                glom_id_ome.append(id_ome)
+                if id_ome not in glom_id_ome:
+                    glom_id_ome.append(id_ome)
+                elif id_ome in glom_id_ome:
+                    print('Duplicate ID found', id_ome)
 
                 centroids_x.append(centroid_x)
                 centroids_y.append(centroid_y)
@@ -164,9 +167,6 @@ for file_path in file_paths:
         template_df = pd.read_excel(template_names[j],header=None)
 
         # template_colnames = template_df.columns
-
-
-        csv_lines = []
 
         if j<2:
             mask_name = 'glomeruli'
