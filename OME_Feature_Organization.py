@@ -58,184 +58,97 @@ tool = 'FUSION'
 file_paths = glob(segmentations_dir + '*.segmentations.ome.tiff')
 
 for file_path in file_paths:
+    base_name = os.path.splitext(os.path.basename(file_path))[0]
+    outdir = os.path.join(outdirs, base_name)
 
-    outdir = outdirs + '/' + \
-        file_path.split('/')[-1].split('.segmentations')[0] + '/'
+    os.makedirs(outdir, exist_ok=True)
 
-    if not os.path.exists(outdir):
-        os.makedirs(outdir)
-
-    xml = slide_path + \
-        file_path.split('/')[-1].split('.segmentations')[0] + '.xml'
-    nm = slide_path + \
-        file_path.split('/')[-1].split('.segmentations')[0] + '.svs'
-    excel_sheet = excel_sheets + \
-        file_path.split('/')[-1].split('.segmentations')[0] + '.xlsx'
+    xml = os.path.join(slide_path, base_name + '.xml')
+    nm = os.path.join(slide_path, base_name + '.svs')
+    excel_sheet = os.path.join(excel_sheets, base_name + '.xlsx')
 
     write_minmax_to_xml(xml)
 
     slide = openslide.OpenSlide(nm)
     wsi = nm
 
-    slideID, slideExt = os.path.splitext(wsi.split('/')[-1])
-    all_contours = {'1': [], '2': [], '3': [], '4': [], '5': [], '6': []}
+    slideID, slideExt = os.path.splitext(os.path.basename(wsi))
+    all_contours = {str(i): [] for i in range(1, 7)}
     tree = ET.parse(xml)
     root = tree.getroot()
-    basename = os.path.splitext(xml)[0]
+
     for Annotation in root.findall("./Annotation"):
         annotationID = Annotation.attrib['Id']
-        if annotationID not in ['1', '2', '3', '4', '5', '6']:
-            pass
-        else:
+        if annotationID in all_contours:
             for Region in Annotation.findall("./*/Region"):
-                verts = []
-                for Vert in Region.findall("./Vertices/Vertex"):
-                    verts.append([int(float(Vert.attrib['X'])),
-                                 int(float(Vert.attrib['Y']))])
+                verts = [[int(float(Vert.attrib['X'])), int(float(Vert.attrib['Y']))] for Vert in Region.findall("./Vertices/Vertex")]
                 all_contours[annotationID].append(np.array(verts))
 
-    for j in range(len(objects)):
-        if j == 0:
-            ome_im = read_ome(file_path, j+2, downsample)
-        else:
-            ome_im = read_ome(file_path, j+1, downsample)
-
+    for j, obj in enumerate(objects):
+        ome_im = read_ome(file_path, j + 2 if j == 0 else j + 1, downsample)
         contours_glom = all_contours[contour_list[j]]
 
-        glom_id_xml = []
-        glom_id_ome = []
+        glom_id_xml, glom_id_ome, centroids_x, centroids_y = [], [], [], []
 
-        centroids_x = []
-        centroids_y = []
+        for i, contours_temp in enumerate(contours_glom):
+            if cv2.contourArea(contours_temp) > min_size[j + 2]:
+                glom_id_xml.append(i + 1)
+                centroid_x = int(np.mean(contours_temp[:, 0]) // downsample)
+                centroid_y = int(np.mean(contours_temp[:, 1]) // downsample)
 
-        for i in range(len(contours_glom)):
+                min_x, max_x = np.min(contours_temp[:, 0]), np.max(contours_temp[:, 0])
+                min_y, max_y = np.min(contours_temp[:, 1]), np.max(contours_temp[:, 1])
 
-            contours_temp = contours_glom[i]
-            a = cv2.contourArea(contours_temp)
-            if a > min_size[j+2]:
-                glom_id_xml.append(i+1)
-                centroid_x = int(np.mean(contours_temp[:, 0])//downsample)
-                centroid_y = int(np.mean(contours_temp[:, 1])//downsample)
+                ome_crop = ome_im[min_y:max_y + 1, min_x:max_x + 1]
 
-                min_x = np.min(contours_temp[:, 0])
-                max_x = np.max(contours_temp[:, 0])
-                min_y = np.min(contours_temp[:, 1])
-                max_y = np.max(contours_temp[:, 1])
+                edge_points = [
+                    (contours_temp[np.where(contours_temp[:, 0] == min_x)][0, 0, :], 1, 0),
+                    (contours_temp[np.where(contours_temp[:, 0] == max_x)][0, 0, :], -1, 0),
+                    (contours_temp[np.where(contours_temp[:, 1] == min_y)][0, 0, :], 0, 1),
+                    (contours_temp[np.where(contours_temp[:, 1] == max_y)][0, 0, :], 0, -1)
+                ]
 
-                ome_crop = ome_im[min_y:max_y+1, min_x:max_x+1]
-
-                leftm = contours_temp[np.where(
-                    contours_temp[:, 0] == min_x), :][0, 0, :]
-                rightm = contours_temp[np.where(
-                    contours_temp[:, 0] == max_x), :][0, 0, :]
-                upm = contours_temp[np.where(
-                    contours_temp[:, 1] == min_y), :][0, 0, :]
-                downm = contours_temp[np.where(
-                    contours_temp[:, 1] == max_y), :][0, 0, :]
-
-                leftm_id = ome_crop[leftm[1]-min_y, leftm[0]+1-min_x]
-                rightm_id = ome_crop[rightm[1]-min_y, rightm[0]-1-min_x]
-                upm_id = ome_crop[upm[1]+1-min_y, upm[0]-min_x]
-                downm_id = ome_crop[downm[1]-1-min_y, downm[0]-min_x]
-
-                m_ids = [leftm_id, rightm_id, upm_id, downm_id]
-
-                if len(m_ids) > 0:
-                    mode_result = stats.mode(m_ids)
-                    print(mode_result.mode, 'mode result', mode_result.mode.size)
-                    if len(mode_result.mode) > 0:
-                        id_ome = mode_result.mode[0]
-                    else:
-                        # Handle case where mode_result.mode is empty
-                        id_ome = 0
-                else:
-                    # Handle case where m_ids is empty
-                    id_ome = 0
-
+                m_ids = [ome_crop[pt[0][1] + pt[2] - min_y, pt[0][0] + pt[1] - min_x] for pt in edge_points]
+                id_ome = stats.mode(m_ids).mode[0] if m_ids else 0
 
                 glom_id_ome.append(id_ome)
-
                 centroids_x.append(centroid_x)
                 centroids_y.append(centroid_y)
 
         sheet_name = excel_sheet_names[j]
         features = pd.read_excel(excel_sheet, sheet_name=sheet_name)
         if j == 2:
-            features = features.iloc[:, 0:2]
-        feature_names = list(features.columns)
-        features['Area'] = features['Area']*0.25**2
-        features['Radius'] = features['Radius']*0.25
+            features = features.iloc[:, :2]
+        features['Area'] *= 0.25 ** 2
+        features['Radius'] *= 0.25
 
-        csv_lines = []
-
-        template_df = pd.read_excel(template_names[j], header=None)
-
-        if j < 2:
-            mask_name = 'glomeruli'
-        else:
-            mask_name = objects[j]
-
-        for k in range(len(glom_id_ome)):
-            current_line = []
-            current_line.append(glom_id_ome[k])
-            current_line.append(file_path.split('/')[-1])
-            current_line.append(mask_name)
-            current_line.append(ontology_names[j])
-            current_line.append(doi)
-            current_line.append(tool)
-            current_line.append(ontology_names[j])
-            current_line.append(centroids_x[k])
-            current_line.append(centroids_y[k])
-            current_line.append(0)
-            csv_lines.append(current_line)
+        csv_lines = [
+            [glom_id_ome[k], file_path.split('/')[-1], 'glomeruli' if j < 2 else objects[j], ontology_names[j], doi, tool, ontology_names[j], centroids_x[k], centroids_y[k], 0]
+            for k in range(len(glom_id_ome))
+        ]
 
         metadata = pd.DataFrame(csv_lines, columns=column_names)
-        concatenated_df = pd.concat(
-            [metadata, features], axis=1, ignore_index=True)
-        concatenated_df.columns = column_names + feature_names
+        concatenated_df = pd.concat([metadata, features], axis=1, ignore_index=True)
+        concatenated_df.columns = column_names + list(features.columns)
         concatenated_df = concatenated_df[concatenated_df['Object ID'] != 0]
 
         if j >= 2:
-            column_names_row = pd.DataFrame(
-                [concatenated_df.columns], columns=concatenated_df.columns)
-            concatenated_df = pd.concat(
-                [column_names_row, concatenated_df], ignore_index=True)
-            concatenated_df.columns = [
-                x for x in range(len(concatenated_df.columns))]
-            concatenated_df = pd.concat(
-                [template_df, concatenated_df], axis=0, ignore_index=True)
-            concatenated_df = concatenated_df.fillna('N/A')
+            concatenated_df = pd.concat([pd.DataFrame([concatenated_df.columns], columns=concatenated_df.columns), concatenated_df], ignore_index=True)
+            concatenated_df.columns = range(len(concatenated_df.columns))
+            concatenated_df = pd.concat([pd.read_excel(template_names[j], header=None), concatenated_df], axis=0, ignore_index=True).fillna('N/A')
 
-        if j >= 2:
-            concatenated_df.to_excel(
-                outdir + objects[j] + '-objects.xlsx', index=False, header=False)
-        else:
-            concatenated_df.to_excel(
-                outdir + objects[j] + '-objects.xlsx', index=False)
+        concatenated_df.to_excel(os.path.join(outdir, f"{objects[j]}-objects.xlsx"), index=False, header=(j < 2))
 
-    df1 = pd.read_excel(outdir + objects[0] + '-objects.xlsx', header=None)
-    df2 = pd.read_excel(outdir + objects[1] + '-objects.xlsx', header=None)
-    df2 = df2.iloc[1:, :]
+    df1 = pd.read_excel(os.path.join(outdir, f"{objects[0]}-objects.xlsx"), header=None)
+    df2 = pd.read_excel(os.path.join(outdir, f"{objects[1]}-objects.xlsx"), header=None).iloc[1:, :]
 
     df_all = pd.concat([df1, df2], axis=0, ignore_index=True)
+    df_all = pd.concat([pd.read_excel(template_names[1], header=None), df_all], axis=0, ignore_index=True)
 
-    template_df = pd.read_excel(template_names[1], header=None)
-    template_df2 = pd.read_excel(
-        '/orange/pinaki.sarder/haitham.abdelazim/HuBMAP/Templates/glomeruli-combined-template.xlsx', header=None)
+    scler_col = pd.DataFrame(np.concatenate((np.zeros((len(df1) - 1, 1)), np.ones((len(df2), 1))), axis=0), columns=['Is Sclerotic'])
+    scler_col['Is Sclerotic'] = scler_col['Is Sclerotic'].map({1: 'TRUE', 0: 'FALSE'})
+    scler_col = pd.concat([pd.read_excel('/orange/pinaki.sarder/haitham.abdelazim/HuBMAP/Templates/glomeruli-combined-template.xlsx', header=None), scler_col], axis=0, ignore_index=True)
 
-    df_all = pd.concat([template_df, df_all], axis=0, ignore_index=True)
-
-    scler_col = np.concatenate(
-        (np.zeros((len(df1)-1, 1)), np.ones((len(df2), 1))), axis=0)
-    scler_col = pd.DataFrame(scler_col)
-    scler_col.columns = ['Is Sclerotic']
-    scler_col['Is Sclerotic'][scler_col['Is Sclerotic'] == 1] = 'TRUE'
-    scler_col['Is Sclerotic'][scler_col['Is Sclerotic'] == 0] = 'FALSE'
-
-    scler_col.columns = [0]
-    scler_col = pd.concat([template_df2, scler_col], axis=0, ignore_index=True)
-
-    df_all = pd.concat([df_all, scler_col], axis=1)
-    df_all = df_all.fillna('N/A')
-    df_all.to_excel(outdir + 'glomeruli' + '-objects.xlsx', index=False)
-    os.remove(outdir + objects[1] + '-objects.xlsx')
+    df_all = pd.concat([df_all, scler_col], axis=1).fillna('N/A')
+    df_all.to_excel(os.path.join(outdir, 'glomeruli-objects.xlsx'), index=False)
+    os.remove(os.path.join(outdir, f"{objects[1]}-objects.xlsx"))
