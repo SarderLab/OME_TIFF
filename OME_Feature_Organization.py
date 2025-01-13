@@ -21,11 +21,14 @@ import matplotlib.pyplot as plt
 from glob import glob
 
 
-def read_ome(file_path,page,downsample):
+def read_ome(file_path, page):
+    downsample = 1
     with ti.TiffFile(file_path) as tiff:
 
-        data = np.array(tiff.series[0].pages[page].asarray()[::downsample,::downsample])
-        print(data, 'data np array')
+        data = tiff.series[0].pages[page].asarray()[::downsample,::downsample]
+        import logging
+        logging.basicConfig(level=logging.INFO)
+        logging.info('data np array: %s', data)
     return data
 
 segmentations_dir = '/orange/pinaki.sarder/haitham.abdelazim/HuBMAP/SegmentationDIRs/'
@@ -64,7 +67,8 @@ for file_path in file_paths:
     nm = slide_path + file_path.split('/')[-1].split('.segmentations')[0] + '.svs'
     excel_sheet = excel_sheets + file_path.split('/')[-1].split('.segmentations')[0] + '.xlsx'
 
-    write_minmax_to_xml(xml)
+    tree = ET.parse(xml)
+    write_minmax_to_xml(tree, time_buffer=10, get_absolute_max=True)
 
     slide=openslide.OpenSlide(nm)
     wsi=nm
@@ -87,9 +91,9 @@ for file_path in file_paths:
                 all_contours[annotationID].append(np.array(verts))
 
 
-    for j in range(len(objects)):
+            ome_im = read_ome(file_path, j+2)
         if j==0:
-            ome_im = read_ome(file_path,j+2,downsample)
+            ome_im = read_ome(file_path, j+1)
         else:
             ome_im = read_ome(file_path,j+1,downsample)
 
@@ -135,14 +139,14 @@ for file_path in file_paths:
                 m_ids = [x for x in m_ids if x!=0]
                 # print(m_ids,'m_ids data')
                 
-                if len(m_ids) > 0:
-                    mode_result = stats.mode(m_ids).mode
-                    if isinstance(mode_result, np.ndarray):
-                        id_ome = mode_result[0]
-                    else:
-                        id_ome = mode_result
+                mode_result = stats.mode(m_ids, axis=None).mode
+                mode_result = stats.mode(m_ids).mode
+                if isinstance(mode_result, np.ndarray):
+                    id_ome = mode_result[0]
                 else:
-                    id_ome = 0
+                    id_ome = mode_result
+            else:
+                id_ome = 0
 
 
                 glom_id_ome.append(id_ome)
@@ -201,7 +205,7 @@ for file_path in file_paths:
 
         #FIGURE OUT HOW TO CONCATENATE BUT KEEP THE HEADERS BELOW IT
         if j >= 2:
-            concatenated_df.to_excel(outdir + objects[j] + '-objects.xlsx',index=False,header=False)
+            concatenated_df.to_excel(outdir + objects[j] + '-objects.xlsx',index=False,header=True)
         else:
             concatenated_df.to_excel(outdir + objects[j] + '-objects.xlsx',index=False)
 
@@ -221,14 +225,21 @@ for file_path in file_paths:
     scler_col = np.concatenate((np.zeros((len(df1)-1,1)),np.ones((len(df2),1))),axis=0)
     scler_col = pd.DataFrame(scler_col)
     scler_col.columns = ['Is Sclerotic']
-    scler_col['Is Sclerotic'][scler_col['Is Sclerotic'] == 1] = 'TRUE'
-    scler_col['Is Sclerotic'][scler_col['Is Sclerotic'] == 0] = 'FALSE'
+    scler_col.loc[scler_col['Is Sclerotic'] == 1, 'Is Sclerotic'] = 'TRUE'
+    scler_col.loc[scler_col['Is Sclerotic'] == 0, 'Is Sclerotic'] = 'FALSE'
 
     scler_col.columns = [0]
     scler_col = pd.concat([template_df2,scler_col],axis=0,ignore_index=True)
 
     df_all = pd.concat([df_all,scler_col],axis=1)
     df_all = df_all.fillna('N/A')
-    df_all.to_excel(outdir + 'glomeruli' + '-objects.xlsx',index=False,header=False)
-    os.remove(outdir + objects[0] + '-objects.xlsx')
-    os.remove(outdir + objects[1] + '-objects.xlsx')
+    df_all.to_excel(outdir + 'glomeruli' + '-objects.xlsx',index=False,header=True)
+    try:
+        os.remove(outdir + objects[0] + '-objects.xlsx')
+    except FileNotFoundError:
+        print(f"File {outdir + objects[0] + '-objects.xlsx'} not found.")
+    
+    try:
+        os.remove(outdir + objects[1] + '-objects.xlsx')
+    except FileNotFoundError:
+        print(f"File {outdir + objects[1] + '-objects.xlsx'} not found.")
