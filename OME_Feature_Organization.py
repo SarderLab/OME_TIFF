@@ -166,6 +166,8 @@ for file_path in file_paths:
         # template_colnames = template_df.columns
 
 
+        csv_lines = []
+
         if j<2:
             mask_name = 'glomeruli'
         else:
