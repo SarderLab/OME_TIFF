@@ -137,6 +137,7 @@ for file_path in file_paths:
                 
                 if len(m_ids) > 0:
                     mode_result = stats.mode(m_ids).mode
+                    print(mode_result, 'mode_result')
                     if isinstance(mode_result, np.ndarray):
                         id_ome = mode_result[0]
                     else:
@@ -144,16 +145,17 @@ for file_path in file_paths:
                 else:
                     id_ome = 0
                 
-                # get last item in glom_id_ome
-                last_id = glom_id_ome[-1] if len(glom_id_ome) > 0 else 0
+                # # get last item in glom_id_ome
+                # last_id = glom_id_ome[-1] if len(glom_id_ome) > 0 else 0
 
-                # check if id_ome is less than last_id by max 1
-                if (last_id - id_ome) > 1:
-                    id_ome = last_id + 1
+                # # check if id_ome is less than last_id by max 1
+                # if (last_id - id_ome) > 1:
+                #     id_ome = last_id + 1
 
                 if id_ome not in glom_id_ome:
                     glom_id_ome.append(id_ome)
                 else:
+                    print('glom_id_ome', glom_id_ome)
                     print('Duplicate ID found', id_ome)
 
                 centroids_x.append(centroid_x)
