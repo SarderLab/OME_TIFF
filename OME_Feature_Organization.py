@@ -107,41 +107,33 @@ for file_path in file_paths:
 
             contours_temp = contours_glom[i]
             a=cv2.contourArea(contours_temp)
-            if a>min_size[j+2]:
-                glom_id_xml.append(i+1)
-                centroid_x = int(np.mean(contours_temp[:,0])//downsample)
-                centroid_y = int(np.mean(contours_temp[:,1])//downsample)
+            if a > min_size[j + 2]:
+                glom_id_xml.append(i + 1)
+                centroid_x = int(np.mean(contours_temp[:, 0]) // downsample)
+                centroid_y = int(np.mean(contours_temp[:, 1]) // downsample)
 
-                min_x = np.min(contours_temp[:,0])
-                max_x = np.max(contours_temp[:,0])
-                min_y = np.min(contours_temp[:,1])
-                max_y = np.max(contours_temp[:,1])
+                min_x, max_x = np.min(contours_temp[:, 0]), np.max(contours_temp[:, 0])
+                min_y, max_y = np.min(contours_temp[:, 1]), np.max(contours_temp[:, 1])
 
-                ome_crop = ome_im[min_y:max_y+1,min_x:max_x+1]
+                ome_crop = ome_im[min_y:max_y + 1, min_x:max_x + 1]
 
-                leftm = contours_temp[np.where(contours_temp[:,0]==min_x),:][0,0,:]
-                leftm_id = ome_crop[leftm[1]-min_y,leftm[0]+1-min_x]
+                leftm = contours_temp[np.where(contours_temp[:, 0] == min_x)][0]
+                rightm = contours_temp[np.where(contours_temp[:, 0] == max_x)][0]
+                upm = contours_temp[np.where(contours_temp[:, 1] == min_y)][0]
+                downm = contours_temp[np.where(contours_temp[:, 1] == max_y)][0]
 
-                rightm = contours_temp[np.where(contours_temp[:,0]==max_x),:][0,0,:]
-                rightm_id = ome_crop[rightm[1]-min_y,rightm[0]-1-min_x]
+                leftm_id = ome_crop[leftm[1] - min_y, leftm[0] + 1 - min_x]
+                rightm_id = ome_crop[rightm[1] - min_y, rightm[0] - 1 - min_x]
+                upm_id = ome_crop[upm[1] + 1 - min_y, upm[0] - min_x]
+                downm_id = ome_crop[downm[1] - 1 - min_y, downm[0] - min_x]
 
-                upm = contours_temp[np.where(contours_temp[:,1]==min_y),:][0,0,:]
-                upm_id = ome_crop[upm[1]+1-min_y,upm[0]-min_x]
-
-                downm = contours_temp[np.where(contours_temp[:,1]==max_y),:][0,0,:]
-                downm_id = ome_crop[downm[1]-1-min_y,downm[0]-min_x]
-                
-                m_ids = [leftm_id,rightm_id,downm_id,upm_id]
-                m_ids = [x for x in m_ids if x!=0]
+                m_ids = [leftm_id, rightm_id, downm_id, upm_id]
+                m_ids = [x for x in m_ids if x != 0]
                 # print(m_ids,'m_ids data')
                 
-                if len(m_ids) > 0:
-                    mode_result = stats.mode(m_ids).mode
-                    print(mode_result, 'mode_result')
-                    if isinstance(mode_result, np.ndarray):
-                        id_ome = mode_result[0]
-                    else:
-                        id_ome = mode_result
+                if m_ids:
+                    id_ome = stats.mode(m_ids, keepdims=True).mode[0]
+                    print(id_ome, 'id_ome')
                 else:
                     id_ome = 0
                 
