@@ -88,13 +88,12 @@ for file_path in file_paths:
 
 
     for j in range(len(objects)):
-        if j==0:
-            ome_im = read_ome(file_path,j+2,downsample)
+        if j == 0:
+            ome_im = read_ome(file_path, j + 2, downsample).astype(np.uint16)
         else:
-            ome_im = read_ome(file_path,j+1,downsample)
+            ome_im = read_ome(file_path, j + 1, downsample).astype(np.uint16)
 
         contours_glom = all_contours[contour_list[j]]
-
 
         glom_id_xml = []
         glom_id_ome = []
@@ -102,11 +101,10 @@ for file_path in file_paths:
         centroids_x = []
         centroids_y = []
 
-
         for i in range(len(contours_glom)):
 
             contours_temp = contours_glom[i]
-            a=cv2.contourArea(contours_temp)
+            a = cv2.contourArea(contours_temp)
             if a > min_size[j + 2]:
                 glom_id_xml.append(i + 1)
                 centroid_x = int(np.mean(contours_temp[:, 0]) // downsample)
@@ -129,20 +127,12 @@ for file_path in file_paths:
 
                 m_ids = [leftm_id, rightm_id, downm_id, upm_id]
                 m_ids = [x for x in m_ids if x != 0]
-                # print(m_ids,'m_ids data')
                 
                 if m_ids:
                     id_ome = stats.mode(m_ids, keepdims=True).mode[0]
                     print(id_ome, 'id_ome')
                 else:
                     id_ome = 0
-                
-                # # get last item in glom_id_ome
-                # last_id = glom_id_ome[-1] if len(glom_id_ome) > 0 else 0
-
-                # # check if id_ome is less than last_id by max 1
-                # if (last_id - id_ome) > 1:
-                #     id_ome = last_id + 1
 
                 if id_ome not in glom_id_ome:
                     glom_id_ome.append(id_ome)
