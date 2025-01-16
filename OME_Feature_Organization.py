@@ -135,12 +135,10 @@ for file_path in file_paths:
                 m_ids = [x for x in m_ids if x!=0]
                 # print(m_ids,'m_ids data')
                 
-                if len(m_ids) > 0:
-                    mode_result = stats.mode(m_ids).mode
-                    if isinstance(mode_result, np.ndarray):
-                        id_ome = mode_result[0]
-                    else:
-                        id_ome = mode_result
+                if len(m_ids)>0:
+                    id_ome = stats.mode(m_ids)
+                    id_ome = id_ome[0][0]
+
                 else:
                     id_ome = 0
 
@@ -148,7 +146,7 @@ for file_path in file_paths:
                 if id_ome not in glom_id_ome:
                     glom_id_ome.append(id_ome)
                 else:
-                    print('Duplicate ID found', id_ome)
+                    print('Duplicate ID found', 'Sheet name', excel_sheet_names[j], 'Object ID', id_ome)
 
                 centroids_x.append(centroid_x)
                 centroids_y.append(centroid_y)
