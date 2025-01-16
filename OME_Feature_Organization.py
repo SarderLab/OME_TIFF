@@ -148,7 +148,7 @@ for file_path in file_paths:
                 if id_ome not in glom_id_ome:
                     glom_id_ome.append(id_ome)
                 else:
-                    print('Duplicate ID found', 'Sheet name', excel_sheet_names[j], 'Object ID', id_ome)
+                    print('Duplicate ID found', 'Sheet name', excel_sheet_names[j], 'Object ID', id_ome, 'File name', basename)
 
                 centroids_x.append(centroid_x)
                 centroids_y.append(centroid_y)
