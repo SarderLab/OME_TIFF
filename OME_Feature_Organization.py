@@ -135,10 +135,12 @@ for file_path in file_paths:
                 m_ids = [x for x in m_ids if x!=0]
                 # print(m_ids,'m_ids data')
                 
-                if len(m_ids)>0:
-                    id_ome = stats.mode(m_ids)
-                    id_ome = id_ome[0][0]
-
+                if len(m_ids) > 0:
+                    mode_result = stats.mode(m_ids).mode
+                    if isinstance(mode_result, np.ndarray):
+                        id_ome = mode_result[0]
+                    else:
+                        id_ome = mode_result
                 else:
                     id_ome = 0
 
