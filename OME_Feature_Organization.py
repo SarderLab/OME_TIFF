@@ -26,6 +26,8 @@ from glob import glob
 ###############################################################################
 # Helper function to read a specific page from OME TIFF
 ###############################################################################
+
+
 def read_ome(file_path, page, downsample):
     """
     Reads a specified page from an OME TIFF using tifffile,
@@ -46,7 +48,7 @@ segmentations_dir = '/orange/pinaki.sarder/h.lohaan/tiff_output/OME_TIFF/Segment
 downsample = 1
 slide_path = '/orange/pinaki.sarder/h.lohaan/tiff_output/OME_TIFF/Reference/'
 excel_sheets = '/orange/pinaki.sarder/h.lohaan/tiff_output/OME_TIFF/ReferenceExcels/'
-outdirs = '/orange/pinaki.sarder/h.lohaan/tiff_output/OME_TIFF'
+outdirs = '/orange/pinaki.sarder/haitham.abdelazim/HuBMAP/output/'
 
 # Minimum polygon areas for certain annotations to filter out small regions
 min_size = [30, 30, 24000, 24000, 10, 10]
@@ -61,7 +63,8 @@ objects = [
     'arteries-arterioles'
 ]
 contour_list = ['3', '4', '5', '6']
-excel_sheet_names = ['Glomeruli', 'Sclerosed glomeruli', 'Tubules', 'Arteries - Arterioles']
+excel_sheet_names = ['Glomeruli', 'Sclerosed glomeruli',
+                     'Tubules', 'Arteries - Arterioles']
 
 column_names = [
     'Object ID',
@@ -100,7 +103,7 @@ tool = 'FUSION'
 file_paths = glob(segmentations_dir + '*.segmentations.ome.tiff')
 
 for file_path in file_paths:
-    
+
     # Prepare output directory for this particular slide
     outdir = os.path.join(
         outdirs,
@@ -108,7 +111,7 @@ for file_path in file_paths:
     )
     if not os.path.exists(outdir):
         os.makedirs(outdir)
-    
+
     # Matching XML, WSI, and Excel paths
     xml_path = (
         slide_path
@@ -132,7 +135,7 @@ for file_path in file_paths:
 
     # Open the whole-slide image
     slide = openslide.OpenSlide(wsi_path)
-    
+
     # Dictionary for storing region polygons
     # We'll store each region as: {'region_id': <string>, 'polygon': np.array(...) }
     all_contours = {'1': [], '2': [], '3': [], '4': [], '5': [], '6': []}
@@ -148,13 +151,13 @@ for file_path in file_paths:
         for Region in Annotation.findall("./*/Region"):
             # Each region has an attribute 'Id' which we can use
             region_id = Region.attrib.get('Id', '0')
-            
+
             verts = []
             for Vert in Region.findall("./Vertices/Vertex"):
                 x_coord = int(float(Vert.attrib['X']))
                 y_coord = int(float(Vert.attrib['Y']))
                 verts.append([x_coord, y_coord])
-            
+
             region_data = {
                 'region_id': region_id,
                 'polygon': np.array(verts)
@@ -165,7 +168,7 @@ for file_path in file_paths:
     # Now process each object type (glomeruli, tubules, arteries, etc.)
     ############################################################################
     for j in range(len(objects)):
-        
+
         # Read a particular page (channel) from the OME TIFF if needed
         # (We keep this step if you still want the segmentation image data,
         # even though we won't use it to get the ID.)
@@ -173,7 +176,7 @@ for file_path in file_paths:
             ome_im = read_ome(file_path, j + 2, downsample)
         else:
             ome_im = read_ome(file_path, j + 1, downsample)
-        
+
         # Extract relevant region dictionaries from the all_contours
         contours_regions = all_contours[contour_list[j]]
 
@@ -186,7 +189,7 @@ for file_path in file_paths:
         for region_data in contours_regions:
             region_id = region_data['region_id']
             contours_temp = region_data['polygon']
-            
+
             # Compute contour area
             a = cv2.contourArea(contours_temp)
             if a > min_size[j + 2]:
@@ -214,7 +217,7 @@ for file_path in file_paths:
             features['Area'] = features['Area'] * (0.25**2)
         if 'Radius' in features.columns:
             features['Radius'] = features['Radius'] * 0.25
-        
+
         # Prepare lines for metadata
         csv_lines = []
 
@@ -233,10 +236,12 @@ for file_path in file_paths:
             current_line.append(region_ids_xml[k])
             current_line.append(file_path.split('/')[-1])     # Source file
             current_line.append(mask_name)                    # Mask name
-            current_line.append(ontology_names[j])            # Mask ID (ontology)
+            # Mask ID (ontology)
+            current_line.append(ontology_names[j])
             current_line.append(doi)                          # Protocol DOI
             current_line.append(tool)                         # Annotation tool
-            current_line.append(ontology_names[j])            # Object type (ontology again)
+            # Object type (ontology again)
+            current_line.append(ontology_names[j])
             current_line.append(centroids_x[k])               # x centroid
             current_line.append(centroids_y[k])               # y centroid
             current_line.append(0)                            # z (assuming 0)
@@ -247,7 +252,8 @@ for file_path in file_paths:
 
         # Concatenate with the features DataFrame
         # Use ignore_index=False so columns line up by name
-        concatenated_df = pd.concat([metadata, features], axis=1, ignore_index=False)
+        concatenated_df = pd.concat(
+            [metadata, features], axis=1, ignore_index=False)
         # Make sure the final columns are the union of column_names + feature_names
         all_cols = column_names + feature_names
         concatenated_df.columns = all_cols
@@ -255,12 +261,16 @@ for file_path in file_paths:
         # If j >= 2, we do the special template concatenation
         if j >= 2:
             # Prepend a row of column names
-            column_names_row = pd.DataFrame([concatenated_df.columns], columns=concatenated_df.columns)
-            concatenated_df = pd.concat([column_names_row, concatenated_df], ignore_index=True)
+            column_names_row = pd.DataFrame(
+                [concatenated_df.columns], columns=concatenated_df.columns)
+            concatenated_df = pd.concat(
+                [column_names_row, concatenated_df], ignore_index=True)
             # Re-label columns with integer indices temporarily
-            concatenated_df.columns = [x for x in range(len(concatenated_df.columns))]
+            concatenated_df.columns = [
+                x for x in range(len(concatenated_df.columns))]
             # Merge with template
-            concatenated_df = pd.concat([template_df, concatenated_df], axis=0, ignore_index=True)
+            concatenated_df = pd.concat(
+                [template_df, concatenated_df], axis=0, ignore_index=True)
             concatenated_df = concatenated_df.fillna('N/A')
 
         # Save to Excel
@@ -268,7 +278,7 @@ for file_path in file_paths:
             # For j >= 2, we skip headers because we've manually inserted them
             concatenated_df.to_excel(
                 os.path.join(outdir, objects[j] + '-objects.xlsx'),
-                index=False, 
+                index=False,
                 header=False
             )
         else:
@@ -282,19 +292,22 @@ for file_path in file_paths:
     # Merge non-sclerotic and sclerotic glomeruli (objects[0] and objects[1])
     # Add column "Is Sclerotic" to final glomeruli spreadsheet
     ###########################################################################
-    df1_path = os.path.join(outdir, objects[0] + '-objects.xlsx')  # non-sclerotic
+    df1_path = os.path.join(
+        outdir, objects[0] + '-objects.xlsx')  # non-sclerotic
     df2_path = os.path.join(outdir, objects[1] + '-objects.xlsx')  # sclerotic
 
     df1 = pd.read_excel(df1_path, header=None)
     df2 = pd.read_excel(df2_path, header=None)
-    df2 = df2.iloc[1:, :]  # remove the first row which is the header row repeated
+    # remove the first row which is the header row repeated
+    df2 = df2.iloc[1:, :]
 
     # Combine them
     df_all = pd.concat([df1, df2], axis=0, ignore_index=True)
 
     # Read templates
     template_df = pd.read_excel(template_names[1], header=None)
-    template_df2 = pd.read_excel('/orange/pinaki.sarder/haitham.abdelazim/HuBMAP/Templates/glomeruli-combined-template.xlsx', header=None)
+    template_df2 = pd.read_excel(
+        '/orange/pinaki.sarder/haitham.abdelazim/HuBMAP/Templates/glomeruli-combined-template.xlsx', header=None)
 
     # Insert the template rows on top
     df_all = pd.concat([template_df, df_all], axis=0, ignore_index=True)
