@@ -42,11 +42,11 @@ def read_ome(file_path, page, downsample):
 ###############################################################################
 # Script parameters and paths
 ###############################################################################
-segmentations_dir = '/orange/pinaki.sarder/h.lohaan/tiff_output/OME_TIFF/SegmentationDIRs/'
+segmentations_dir = '/orange/pinaki.sarder/haitham.abdelazim/HuBMAP/SegmentationDIRs/'
 downsample = 1
-slide_path = '/orange/pinaki.sarder/h.lohaan/tiff_output/OME_TIFF/Reference/'
-excel_sheets = '/orange/pinaki.sarder/h.lohaan/tiff_output/OME_TIFF/ReferenceExcels/'
-outdirs = '/orange/pinaki.sarder/h.lohaan/tiff_output/OME_TIFF'
+slide_path = '/orange/pinaki.sarder/haitham.abdelazim/HuBMAP/Reference/'
+excel_sheets = '/orange/pinaki.sarder/haitham.abdelazim/HuBMAP/ReferenceExcels/'
+outdirs = '/blue/pinaki.sarder/h.lohaan/tiff_output/OME_TIFF/'
 
 # Minimum polygon areas for certain annotations to filter out small regions
 min_size = [30, 30, 24000, 24000, 10, 10]
@@ -293,8 +293,8 @@ for file_path in file_paths:
     df_all = pd.concat([df1, df2], axis=0, ignore_index=True)
 
     # Read templates
-    template_df = pd.read_excel(template_names[1], header=None)
-    template_df2 = pd.read_excel('/orange/pinaki.sarder/haitham.abdelazim/HuBMAP/Templates/glomeruli-combined-template.xlsx', header=None)
+    # template_df = pd.read_excel(template_names[1], header=None)
+    # template_df2 = pd.read_excel('/orange/pinaki.sarder/haitham.abdelazim/HuBMAP/Templates/glomeruli-combined-template.xlsx', header=None)
 
     # Insert the template rows on top
     df_all = pd.concat([template_df, df_all], axis=0, ignore_index=True)
@@ -311,7 +311,7 @@ for file_path in file_paths:
 
     # Prepend combined template rows to the sclerotic column
     scler_col.columns = [0]
-    scler_col = pd.concat([template_df2, scler_col], axis=0, ignore_index=True)
+    scler_col = pd.concat([template_df, scler_col], axis=0, ignore_index=True)
 
     # Merge the sclerotic column into df_all
     df_all = pd.concat([df_all, scler_col], axis=1)
