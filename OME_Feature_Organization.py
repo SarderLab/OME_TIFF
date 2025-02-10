@@ -293,11 +293,11 @@ for file_path in file_paths:
     df_all = pd.concat([df1, df2], axis=0, ignore_index=True)
 
     # Read templates
-    # template_df = pd.read_excel(template_names[1], header=None)
-    # template_df2 = pd.read_excel('/orange/pinaki.sarder/haitham.abdelazim/HuBMAP/Templates/glomeruli-combined-template.xlsx', header=None)
+    template_df = pd.read_excel(template_names[1], header=None)
+    template_df2 = pd.read_excel('/orange/pinaki.sarder/haitham.abdelazim/HuBMAP/Templates/glomeruli-combined-template.xlsx', header=None)
 
     # Insert the template rows on top
-    df_all = pd.concat([template_df, df_all], axis=0, ignore_index=True)
+    df_all = pd.concat([template_df2, df_all], axis=0, ignore_index=True)
 
     # Add "Is Sclerotic" column
     scler_col = np.concatenate((
