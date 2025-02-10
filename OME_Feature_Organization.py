@@ -46,7 +46,7 @@ segmentations_dir = '/orange/pinaki.sarder/haitham.abdelazim/HuBMAP/Segmentation
 downsample = 1
 slide_path = '/orange/pinaki.sarder/haitham.abdelazim/HuBMAP/Reference/'
 excel_sheets = '/orange/pinaki.sarder/haitham.abdelazim/HuBMAP/ReferenceExcels/'
-outdirs = '/blue/pinaki.sarder/h.lohaan/tiff_output/OME_TIFF/'
+outdirs = '/blue/pinaki.sarder/haitham.abdelazim/HuBMAP/output_files/'
 
 # Minimum polygon areas for certain annotations to filter out small regions
 min_size = [30, 30, 24000, 24000, 10, 10]
