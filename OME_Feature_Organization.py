@@ -298,8 +298,8 @@ for file_path in file_paths:
 
 
     # Read the two Excel files
-    df1 = pd.read_excel(df1_path, header=None)
-    df2 = pd.read_excel(df2_path, header=None)
+    df1 = pd.read_excel(df1_path)
+    df2 = pd.read_excel(df2_path)
     df1.to_excel(
         os.path.join(outdir, 'non-sclerotic-glomeruli-objects.xlsx'),
         index=False,
