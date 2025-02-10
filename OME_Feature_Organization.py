@@ -44,10 +44,10 @@ def read_ome(file_path, page, downsample):
 ###############################################################################
 # Script parameters and paths
 ###############################################################################
-segmentations_dir = '/orange/pinaki.sarder/h.lohaan/tiff_output/OME_TIFF/SegmentationDIRs/'
+segmentations_dir = '/orange/pinaki.sarder/haitham.abdelazim/HuBMAP/SegmentationDIRs/'
 downsample = 1
-slide_path = '/orange/pinaki.sarder/h.lohaan/tiff_output/OME_TIFF/Reference/'
-excel_sheets = '/orange/pinaki.sarder/h.lohaan/tiff_output/OME_TIFF/ReferenceExcels/'
+slide_path = '/orange/pinaki.sarder/haitham.abdelazim/HuBMAP/Reference/'
+excel_sheets = '/orange/pinaki.sarder/haitham.abdelazim/HuBMAP/ReferenceExcels/'
 outdirs = '/orange/pinaki.sarder/haitham.abdelazim/HuBMAP/output/'
 
 # Minimum polygon areas for certain annotations to filter out small regions
@@ -307,7 +307,7 @@ for file_path in file_paths:
         index=False,
         header=False
     )
-    
+
     # Read the two Excel files
     df1 = pd.read_excel(df1_path, header=None)
     df2 = pd.read_excel(df2_path, header=None)
