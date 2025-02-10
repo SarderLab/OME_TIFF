@@ -296,20 +296,14 @@ for file_path in file_paths:
         outdir, objects[0] + '-objects.xlsx')  # non-sclerotic
     df2_path = os.path.join(outdir, objects[1] + '-objects.xlsx')  # sclerotic
 
-
     # Read the two Excel files
     df1 = pd.read_excel(df1_path)
     df2 = pd.read_excel(df2_path)
     df1.to_excel(
-        os.path.join(outdir, 'non-sclerotic-glomeruli-objects.xlsx'),
-        index=False,
-        header=False
-    )
+        os.path.join(outdir, 'non-sclerotic-glomeruli-objects.xlsx'))
 
     df2.to_excel(
-        os.path.join(outdir, 'sclerotic-glomeruli-objects.xlsx'),
-        index=False,
-        header=False
+        os.path.join(outdir, 'sclerotic-glomeruli-objects.xlsx')
     )
     # remove the first row which is the header row repeated
     df2 = df2.iloc[1:, :]
